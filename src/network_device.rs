@@ -25,7 +25,7 @@ pub mod network_device {
             String::from("cisco1") //TODO: Build example medatadata source. Probably a sqlx database connection or someting similar.
         }
         pub fn username() -> String {
-            let x = String::from("someusername"); TODO: Need to apply some log filtering to ensure that password/username are not passed to the log.
+            let x = String::from("someusername"); //TODO: Need to apply some log filtering to ensure that password/username are not passed to the log.
             x
         }
         pub fn password() -> String {
