@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 ssh2 = "0.9.4"
+ssh2-config = { version = "*" }
