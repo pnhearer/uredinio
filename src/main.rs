@@ -6,6 +6,18 @@ use std::time::Duration;
 
 
 fn main() {
+
+    //GOAL: Our objective is to be able to pass in a device name. Have the information about a device collected from an external data source(I am shooting for SQLx) and then build a device struct with a set of methods specifically applicable to the VENDOR and OS version of the network device.
+    //GOAL CONT'd: To acoomplish this we will dynamically allocate traits to the struct to emulate inheritance. Example Cisco 3164 with NXOS is of type "Network_device" and is of type "Cisco" and is of type "NXOS", so it will be given the correct implementation of it's methods.
+    //GOAL CONT'd(2): The achieved state is such that we can call myciscoNXdevice1.show_interfaces() and on myjuniperdevice1.show_interfaces() and we can achieve device specific implementations and get the intended output.
+
+
+    //TODO: We actually have to turn these into functions and create a real flow for the program. Generally we are testing to expand our knowledge of this library.
+    //TODO: 1.) Dynamic Auth mechanism selection 2.) Assign host and auth information into a variable  3.) Dynamic crypto negotiation.
+    //TODO: 4.) Explore what errors are possible, not sure how to do this except to force breaks intentionally.
+    //TODO: Move everything to the library and clean up main
+    //TODO: Begin creating the network device object which is manipulable.
+
     let ipv4 = std::net::SocketAddr::new(IpAddr::V4("a.b.c.d".parse().unwrap()), 22);
     let tcp = match TcpStream::connect_timeout(&ipv4, Duration::new(5, 0)) {
         Ok(tcp) => tcp,
