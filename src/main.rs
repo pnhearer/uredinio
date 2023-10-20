@@ -6,7 +6,7 @@ use std::time::Duration;
 
 
 fn main() {
-    let ipv4 = std::net::SocketAddr::new(IpAddr::V4("127.0.0.1".parse().unwrap()), 22);
+    let ipv4 = std::net::SocketAddr::new(IpAddr::V4("a.b.c.d".parse().unwrap()), 22);
     let tcp = match TcpStream::connect_timeout(&ipv4, Duration::new(5, 0)) {
         Ok(tcp) => tcp,
         _ => return
@@ -21,35 +21,52 @@ fn main() {
     // Handshake transport protocol
     match session.handshake() {
         Ok(()) => (),
-        Err(e) => println!("Error: {}", e)
+        Err(e) => {println!("Error: {}", e); return}
     };
 
     // Authentication
-    match session.userauth_password("username", "password") {
+    // TODO: We need to validate which type of auth we want to use. We have a method available to ask which is valid for this SSH Server
+    match session.userauth_password("Username", "password") {
         Ok(()) => (),
-        Err(e) => println!("Error: {}", e)
+        Err(e) => {println!("Error: {}", e); return}
     };
     // Create channel, be lazy and use expect.
+    // TODO: Explore channel creation associated errors. We need to handle these more gracefully. Possibly a retry.
     let mut channel = session.channel_session().expect("Failed to establish channel");
     // Ask for a Shell
     match channel.shell() {
         Ok(()) => (),
-        Err(e) => println!("{}", e)
+        Err(e) => {println!("Error: {}", e); return}
     }
 
     //Let's Issue commands to the remote host!
-    channel.write_all(b"ls").unwrap();
+    channel.write_all(b"cat /var/log/bootstrap.log\n").unwrap();
+    channel.flush().unwrap();
+
+    //Create a output collector for the upcoming loop.
+    let mut rcollector: Vec<u8> = Vec::new();
 
     //Begin the read loop
-
     loop {
-        let mut rbuff = [0u8;1024];
+        // When a command is send to the remote host it is necessarily indeterminable as to
+        // what size output will come back to the buffer, thus we must fill the buffer, clear
+        // the buffer and repeat et al~.  This read buffer is an array that has no knowledge about
+        // itself outside of contents and total length.
+        let mut rbuff = [0u8;4096];
+
+
+        // This match statement is clever to me. It reads. If the returned amount of bytes read
+        // in are 0, break the loop. We're done. If the value is of any other amount of bytes
+        // returned, we can create a slice of the read buffer indexed from the 0th byth to the cth
+        // byte, thus capturing all of the data.
+        // from here we create a string from our bytes(assuming they are UTF-8) and print them out)
+
         match channel.read(&mut rbuff) {
             Ok(0) => break,
             Ok(c) => {
-                let slice = &rbuff[0..c];
+                let mut slice = &rbuff[0..c];
                 match std::str::from_utf8(slice) {
-                    Ok(s) => print!("{}",s ),
+                    Ok(s) => { rcollector.extend_from_slice(&slice) ; println!("{}", s)},
                     Err(e) => {
                         eprint!("Output was not UTF-8. Instead was {}", e);
                         break
@@ -62,6 +79,10 @@ fn main() {
             }
         }
         };
+
+    for x in rcollector {
+    print!("{:?}", x)
+    }
 }
 
 
